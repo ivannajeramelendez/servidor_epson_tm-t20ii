@@ -1,24 +1,3 @@
-## epsonsimplecups ##
-CUPS driver for the Epson TM-T20 POS printer.
-Raspberry PI.
-
-# Copilar dev: #
-
-sudo apt-get install libcups2-dev
-sudo apt-get install libcupsimage2-dev
-
-# Correcion: #
-
-remover 'inline'
-
-# Cambio: #
-inline void initializeSettings
-# A: #
-void initializeSettings
-
-
-### Archivo Final ###
-_
 /*
  * This code is based on the Star Micronics Driver. The copyright notice
  * is preserved below, however, the code at this point bears very little relationship
@@ -93,7 +72,7 @@ typedef int (*cupsParseOptions_fndef)(const char *arg, int num_options, cups_opt
 typedef int (*cupsMarkOptions_fndef)(ppd_file_t *ppd, int num_options, cups_option_t *options);
 
 static ppdClose_fndef ppdClose_fn;
-static ppdFindChoice_fndef ppdFindChoice_fn;q
+static ppdFindChoice_fndef ppdFindChoice_fn;
 static ppdFindMarkedChoice_fndef ppdFindMarkedChoice_fn;
 static ppdFindOption_fndef ppdFindOption_fn;
 static ppdMarkDefaults_fndef ppdMarkDefaults_fn;
@@ -317,11 +296,11 @@ inline void getPageWidthPageHeight(ppd_file_t * ppd, struct settings_ * settings
     }
 }
 
- void initializeSettings(char * commandLineOptionSettings, struct settings_ * settings)
+inline void initializeSettings(char * commandLineOptionSettings, struct settings_ * settings)
 {
     ppd_file_t *    ppd         = NULL;
     cups_option_t * options     = NULL;
-        int numOptions;
+	int numOptions;
 
     ppd = PPDOPENFILE(getenv("PPD"));
 
@@ -339,10 +318,10 @@ inline void getPageWidthPageHeight(ppd_file_t * ppd, struct settings_ * settings
 
     settings->pageCutType                    = getOptionChoiceIndex("PageCutType"                   , ppd);
     settings->docCutType                     = getOptionChoiceIndex("DocCutType"                    , ppd);
-        settings->bytesPerScanLine    = 80;
-        settings->bytesPerScanLineStd = 80;
-        settings->doubleMode = getOptionChoiceIndex("PixelDoublingType", ppd);
-        settings->drawerKick = getOptionChoiceIndex("CashDrawerType", ppd);
+	settings->bytesPerScanLine    = 80;
+	settings->bytesPerScanLineStd = 80;
+	settings->doubleMode = getOptionChoiceIndex("PixelDoublingType", ppd);
+	settings->drawerKick = getOptionChoiceIndex("CashDrawerType", ppd);
 
     getPageWidthPageHeight(ppd, settings);
 
@@ -355,7 +334,7 @@ void jobSetup(struct settings_ settings)
 {
     outputCommand(printerInitializeCommand);
     if (settings.drawerKick == 2){
-        outputCommand(drawerKickCommand);
+	outputCommand(drawerKickCommand);
     }
 }
 
@@ -365,21 +344,21 @@ void pageSetup(struct settings_ settings, cups_page_header_t header)
 
 void endPage(struct settings_ settings)
 {
-        if (settings.pageCutType)
-        {
-                outputCommand(pageCutCommand);
+	if (settings.pageCutType)
+	{
+		outputCommand(pageCutCommand);
     }
 }
 
 void endJob(struct settings_ settings)
 {
-        if (settings.docCutType)
-        {
-                outputCommand(pageCutCommand);
+	if (settings.docCutType)
+	{
+		outputCommand(pageCutCommand);
     }
     if (settings.drawerKick == 1)
     {
-        outputCommand(drawerKickCommand);
+	outputCommand(drawerKickCommand);
     }
 }
 
@@ -432,7 +411,7 @@ int main(int argc, char *argv[])
     unsigned char *     rasterData              = NULL;     /* Pointer to raster data buffer                                                        */
     struct settings_    settings;                           /* Configuration settings                                                               */
 
-        int bytesPerScanline = 0;
+	int bytesPerScanline = 0;
 
 #ifdef RPMBUILD
     void * libCupsImage = NULL;                             /* Pointer to libCupsImage library                                                      */
@@ -503,7 +482,7 @@ int main(int argc, char *argv[])
 
     initializeSettings(argv[5], &settings);
 
-        jobSetup(settings);
+	jobSetup(settings);
     ras = CUPSRASTEROPEN(fd, CUPS_RASTER_READ);
 
     page = 0;
@@ -511,7 +490,7 @@ int main(int argc, char *argv[])
     while (CUPSRASTERREADHEADER2(ras, &header))
 
     {
-                t_bufferscan *bs = NULL;
+		t_bufferscan *bs = NULL;
         if ((header.cupsHeight == 0) || (header.cupsBytesPerLine == 0))
         {
             break;
@@ -531,31 +510,31 @@ int main(int argc, char *argv[])
         page++;
         fprintf(stderr, "PAGE: %d %d\n", page, header.NumCopies);
 
-                bytesPerScanline = settings.bytesPerScanLine < header.cupsBytesPerLine ?
-                                settings.bytesPerScanLine : header.cupsBytesPerLine;
+		bytesPerScanline = settings.bytesPerScanLine < header.cupsBytesPerLine ?
+				settings.bytesPerScanLine : header.cupsBytesPerLine;
 
-                bs = bufferscan_new(bytesPerScanline, 256, settings.doubleMode, stdout);
-                if (!bs)
-                {
-                        CLEANUP;
-                        return EXIT_FAILURE;
-                }
+		bs = bufferscan_new(bytesPerScanline, 256, settings.doubleMode, stdout);
+		if (!bs)
+		{
+			CLEANUP;
+			return EXIT_FAILURE;
+		}
 
         for (y = 0; y < header.cupsHeight; y ++)
         {
-                        memset(rasterData, 0, bytesPerScanline);
+			memset(rasterData, 0, bytesPerScanline);
 
             if (CUPSRASTERREADPIXELS(ras, rasterData, header.cupsBytesPerLine) < 1)
             {
                 break;
             }
 
-                        bufferscan_addline(bs, rasterData);
+			bufferscan_addline(bs, rasterData);
         }
 
-                bufferscan_flush(bs);
-                bufferscan_dispose(bs);
-                bs = NULL;
+		bufferscan_flush(bs);
+		bufferscan_dispose(bs);
+		bs = NULL;
 
         endPage(settings);
     }
@@ -575,4 +554,4 @@ int main(int argc, char *argv[])
 
     return (page == 0)?EXIT_FAILURE:EXIT_SUCCESS;
 }
-_
+
